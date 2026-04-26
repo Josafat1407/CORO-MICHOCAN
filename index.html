@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coro — Asistencia</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --gold: #C8973A;
+            --gold-light: #E8B96A;
+            --dark: #0F0E0C;
+            --dark2: #1A1814;
+            --dark3: #242118;
+            --surface: #2A2720;
+            --border: #3A3730;
+            --text: #F0EDE6;
+            --text-muted: #8A8478;
+            --green: #4CAF7D;
+            --red: #E05C5C;
+            --blue: #5C9EE0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--dark);
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: 
+                radial-gradient(ellipse at 20% 20%, rgba(200,151,58,0.06) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 80%, rgba(200,151,58,0.04) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .app { position: relative; z-index: 1; }
+
+        .header {
+            background: var(--dark2);
+            border-bottom: 1px solid var(--border);
+            padding: 18px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-brand { display: flex; align-items: center; gap: 14px; }
+
+        .brand-icon {
+            width: 42px; height: 42px;
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px;
+        }
+
+        .brand-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--gold);
+            line-height: 1;
+        }
+
+        .brand-sub {
+            font-size: 11px;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 4px;
+            background: var(--dark3);
+            padding: 4px;
+            border-radius: 10px;
+        }
+
+        .nav-tab {
+            padding: 8px 20px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 7px;
+            transition: all 0.2s;
+        }
+
+        .nav-tab.active { background: var(--gold); color: var(--dark); font-weight: 600; }
+
+        .screen { display: none; padding: 40px 32px; max-width: 900px; margin: 0 auto; }
+        .screen.active { display: block; }
+
+        .checkin-hero { text-align: center; margin-bottom: 48px; }
+        .checkin-date { font-size: 12px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin-bottom: 12px; }
+        .checkin-title { font-family: 'Playfair Display', serif; font-size: 48px; font-weight: 900; color: var(--text); line-height: 1.1; }
+        .checkin-title span { color: var(--gold); }
+        .checkin-sub { color: var(--text-muted); margin-top: 10px; font-size: 15px; }
+
+        .checkin-form {
+            background: var(--dark2);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 460px;
+            margin: 0 auto;
+        }
+
+        .form-label { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; display: block; }
+        .code-input {
+            width: 100%;
+            background: var(--dark3);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 18px 20px;
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text);
+            text-align: center;
+            letter-spacing: 8px;
+            outline: none;
+        }
+
+        .code-input:focus { border-color: var(--gold); }
+        .checkin-btn {
+            width: 100%;
+            margin-top: 20px;
+            padding: 18px;
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            border: none;
+            border-radius: 12px;
+            font-family: 'Playfair Display', serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--dark);
+            cursor: pointer;
+        }
+
+        .checkin-feedback { margin-top: 20px; padding: 16px 20px; border-radius: 12px; text-align: center; font-size: 15px; display: none; }
+        .checkin-feedback.success { background: rgba(76,175,125,0.15); border: 1px solid rgba(76,175,125,0.3); color: var(--green); display: block; }
+        .checkin-feedback.error { background: rgba(224,92,92,0.15); border: 1px solid rgba(224,92,92,0.3); color: var(--red); display: block; }
+        .checkin-feedback.warning { background: rgba(200,151,58,0.15); border: 1px solid rgba(200,151,58,0.3); color: var(--gold); display: block; }
+
+        .recent-title { text-align: center; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin: 36px 0 16px; }
+        .recent-list { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 460px; margin: 0 auto; }
+        .recent-chip { background: var(--dark2); border: 1px solid var(--border); border-radius: 20px; padding: 6px 14px; font-size: 13px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+        .recent-chip .dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
+        .stat-card { background: var(--dark2); border: 1px solid var(--border); border-radius: 16px; padding: 24px; }
+        .stat-label { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+        .stat-value { font-family: 'Playfair Display', serif; font-size: 36px; font-weight: 700; color: var(--gold); line-height: 1; }
+        .stat-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+        .section { background: var(--dark2); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 20px; }
+        .section-head { padding: 18px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th { padding: 12px 20px; text-align: left; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border); background: var(--dark3); }
+        td { padding: 14px 20px; font-size: 14px; border-bottom: 1px solid rgba(58,55,48,0.5); }
+
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+        .badge-green { background: rgba(76,175,125,0.15); color: var(--green); }
+        .badge-gold { background: rgba(200,151,58,0.15); color: var(--gold); }
+        .badge-red { background: rgba(224,92,92,0.15); color: var(--red); }
+
+        .pct-bar { width: 80px; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; display: inline-block; vertical-align: middle; margin-right: 8px; }
+        .pct-fill { height: 100%; background: var(--gold); border-radius: 2px; }
+
+        .btn { padding: 8px 16px; border: none; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: opacity 0.2s; }
+        .btn-gold { background: var(--gold); color: var(--dark); }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
+        .btn-red { background: rgba(224,92,92,0.15); color: var(--red); border: 1px solid rgba(224,92,92,0.2); }
+        .btn-green { background: rgba(76,175,125,0.15); color: var(--green); border: 1px solid rgba(76,175,125,0.2); }
+
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 100; display: none; align-items: center; justify-content: center; }
+        .modal-overlay.open { display: flex; }
+        .modal { background: var(--dark2); border: 1px solid var(--border); border-radius: 20px; padding: 36px; width: 400px; max-width: 90vw; }
+        .modal-wide { width: 600px; }
+
+        .lock-screen { position: fixed; inset: 0; background: var(--dark); z-index: 200; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
+        .pin-input { background: var(--dark2); border: 2px solid var(--border); border-radius: 12px; padding: 14px 24px; font-family: 'Playfair Display', serif; font-size: 28px; letter-spacing: 6px; color: var(--text); text-align: center; width: 200px; }
+
+        .search-divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; color: var(--text-muted); font-size: 12px; text-transform: uppercase; }
+        .search-divider::before, .search-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+        
+        .name-search-input { width: 100%; background: var(--dark3); border: 2px solid var(--border); border-radius: 12px; padding: 14px 18px; color: var(--text); font-family: 'DM Sans', sans-serif; outline: none; }
+        .name-results { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; max-height: 200px; overflow-y: auto; }
+        .name-result-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--dark3); border: 1px solid var(--border); border-radius: 10px; cursor: pointer; }
+        .name-result-item:hover { border-color: var(--gold); background: rgba(200,151,58,0.06); }
+        .name-result-name { font-size: 14px; font-weight: 500; }
+        .name-result-code { font-size: 12px; color: var(--text-muted); }
+
+        .empty-state { padding: 48px; text-align: center; color: var(--text-muted); }
+        .admin-panel { display: none; }
+        .admin-panel.active { display: block; }
+    </style>
+</head>
+<body>
+
+<div class="lock-screen" id="lockScreen">
+    <div style="font-size: 48px;">🔒</div>
+    <div style="font-family: 'Playfair Display', serif; font-size: 24px; color: var(--gold);">Acceso Administrador</div>
+    <input type="password" class="pin-input" id="pinInput" maxlength="6" placeholder="····">
+    <div id="pinError" style="color:var(--red); font-size:13px;"></div>
+    <button class="btn btn-gold" onclick="checkPin()" style="padding:12px 32px;">Entrar</button>
+    <button class="btn btn-outline" onclick="hideLock()">Cancelar</button>
+</div>
+
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal">
+        <div style="font-family: 'Playfair Display', serif; font-size: 22px; margin-bottom: 20px;">¿Eliminar miembro?</div>
+        <p style="color:var(--text-muted); font-size:14px; margin-bottom: 20px;">Esta acción borrará al miembro y su historial.</p>
+        <div style="display:flex; gap:10px;">
+            <button class="btn btn-outline" style="flex:1" onclick="closeDeleteModal()">Cancelar</button>
+            <button class="btn btn-red" style="flex:1" onclick="confirmDelete()">Eliminar</button>
+        </div>
+    </div>
+</div>
+
+<div class="app">
+    <div class="header">
+        <div class="header-brand">
+            <div class="brand-icon">🎵</div>
+            <div>
+                <div class="brand-name">Coro</div>
+                <div class="brand-sub">Control de Asistencia</div>
+            </div>
+        </div>
+        <div class="nav-tabs">
+            <button class="nav-tab active" id="tab-checkin" onclick="showScreen('checkin')">Check-in</button>
+            <button class="nav-tab" id="tab-admin" onclick="requestAdmin()">Administrador</button>
+        </div>
+    </div>
+
+    <div class="screen active" id="screen-checkin">
+        <div class="checkin-hero">
+            <div class="checkin-date" id="checkinDate"></div>
+            <div class="checkin-title">Bienvenido al<br><span>Coro</span></div>
+            <div class="checkin-sub">Ingresa tu código para registrar tu asistencia</div>
+        </div>
+        <div class="checkin-form">
+            <label class="form-label">Tu código de miembro</label>
+            <input type="text" class="code-input" id="codeInput" maxlength="6" placeholder="000" onkeydown="if(event.key==='Enter') doCheckin()">
+            <button class="checkin-btn" onclick="doCheckin()">✓ Registrar Asistencia</button>
+            <div class="checkin-feedback" id="checkinFeedback"></div>
+            <div class="search-divider">o busca por nombre</div>
+            <input type="text" class="name-search-input" id="nameSearchInput" placeholder="Escribe tu nombre..." oninput="searchByName(this.value)">
+            <div class="name-results" id="nameResults"></div>
+        </div>
+        <div class="recent-title">Registrados hoy</div>
+        <div class="recent-list" id="recentList"></div>
+    </div>
+
+    <div class="screen" id="screen-admin">
+        <div class="admin-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px;">
+            <div style="font-family:'Playfair Display',serif; font-size:28px;">Panel de Administración</div>
+            <div class="nav-tabs">
+                <button class="nav-tab active" onclick="showAdminPanel('miembros')">Miembros</button>
+                <button class="nav-tab" onclick="showAdminPanel('sesiones')">Sesiones</button>
+                <button class="nav-tab" onclick="showAdminPanel('reportes')">Reportes</button>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total miembros</div>
+                <div class="stat-value" id="statTotal">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Sesiones</div>
+                <div class="stat-value" id="statSessions">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Asistencia hoy</div>
+                <div class="stat-value" id="statToday">0</div>
+            </div>
+        </div>
+
+        <div class="admin-panel active" id="panel-miembros">
+            <div class="section">
+                <div class="section-head">
+                    <span>Miembros del Coro</span>
+                    <button class="btn btn-gold" onclick="openAddMember()">+ Agregar</button>
+                </div>
+                <table>
+                    <thead><tr><th>Código</th><th>Nombre</th><th>Rol</th><th>Asistencias</th><th></th></tr></thead>
+                    <tbody id="membersTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="admin-panel" id="panel-sesiones">
+            <div class="section">
+                <div class="section-head"><span>Historial de Sesiones</span></div>
+                <table>
+                    <thead><tr><th>Fecha</th><th>Hora</th><th>Asistentes</th><th>%</th><th></th></tr></thead>
+                    <tbody id="sessionsTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="admin-panel" id="panel-reportes">
+            <div style="display:flex; gap:10px; margin-bottom:16px;">
+                <select class="name-search-input" id="reportSession" onchange="renderReport()" style="flex:1"></select>
+                <button class="btn btn-gold" onclick="exportCSV()">Exportar CSV</button>
+            </div>
+            <div class="section">
+                <table>
+                    <thead><tr><th>Código</th><th>Nombre</th><th>Asistencias</th><th>%</th><th>Estado</th></tr></thead>
+                    <tbody id="reportTable"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="addMemberModal">
+    <div class="modal">
+        <div style="font-family:'Playfair Display',serif; font-size:22px; margin-bottom:20px;">Agregar miembro</div>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+            <input type="text" class="name-search-input" id="newCode" placeholder="Código (ej. 001)">
+            <input type="text" class="name-search-input" id="newName" placeholder="Nombre completo">
+            <input type="text" class="name-search-input" id="newRole" placeholder="Voz (Tenor, Soprano...)">
+        </div>
+        <div style="display:flex; gap:10px; margin-top:20px;">
+            <button class="btn btn-outline" style="flex:1" onclick="closeAddMember()">Cancelar</button>
+            <button class="btn btn-gold" style="flex:1" onclick="saveMember()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="sessionDetailModal">
+    <div class="modal modal-wide">
+        <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+            <div id="sessionDetailTitle" style="font-family:'Playfair Display',serif; font-size:22px;"></div>
+            <button class="btn btn-outline" onclick="closeSessionDetail()">Cerrar</button>
+        </div>
+        <table>
+            <thead><tr><th>#</th><th>Nombre</th><th>Código</th><th>Hora</th></tr></thead>
+            <tbody id="sessionDetailTable"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const ADMIN_PIN = '1234';
+    let DB = loadDB();
+
+    function loadDB() {
+        const raw = localStorage.getItem('coro_db');
+        return raw ? JSON.parse(raw) : { members: [], sessions: [], attendance: [] };
+    }
+
+    function saveDB() { localStorage.setItem('coro_db', JSON.stringify(DB)); }
+
+    function today() { return new Date().toISOString().split('T')[0]; }
+
+    function ensureTodaySession() {
+        const t = today();
+        let s = DB.sessions.find(s => s.date === t);
+        if (!s) {
+            s = { id: Date.now().toString(), date: t, time: new Date().toTimeString().slice(0,5) };
+            DB.sessions.push(s);
+            saveDB();
+        }
+        return s;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const opts = { weekday:'long', year:'numeric', month:'long', day:'numeric' };
+        document.getElementById('checkinDate').textContent = new Date().toLocaleDateString('es-MX', opts).toUpperCase();
+        ensureTodaySession();
+        renderRecent();
+    });
+
+    function showScreen(name) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById('screen-' + name).classList.add('active');
+        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('tab-' + name).classList.add('active');
+        if (name === 'admin') renderAdmin();
+    }
+
+    function requestAdmin() {
+        document.getElementById('lockScreen').style.display = 'flex';
+        document.getElementById('pinInput').focus();
+    }
+
+    function hideLock() { document.getElementById('lockScreen').style.display = 'none'; }
+
+    function checkPin() {
+        if (document.getElementById('pinInput').value === ADMIN_PIN) {
+            hideLock();
+            showScreen('admin');
+        } else {
+            alert('PIN incorrecto');
+        }
+    }
+
+    function doCheckin() {
+        const code = document.getElementById('codeInput').value.trim().toUpperCase();
+        const fb = document.getElementById('checkinFeedback');
+        const member = DB.members.find(m => m.code === code);
+
+        if (!member) {
+            fb.textContent = 'Código no encontrado';
+            fb.className = 'checkin-feedback error';
+            return;
+        }
+
+        const session = ensureTodaySession();
+        if (DB.attendance.find(a => a.memberId === member.id && a.sessionId === session.id)) {
+            fb.textContent = 'Ya registrado hoy';
+            fb.className = 'checkin-feedback warning';
+            return;
+        }
+
+        DB.attendance.push({ id: Date.now().toString(), memberId: member.id, sessionId: session.id, time: new Date().toTimeString().slice(0,5) });
+        saveDB();
+        fb.textContent = '¡Bienvenido, ' + member.name + '!';
+        fb.className = 'checkin-feedback success';
+        document.getElementById('codeInput').value = '';
+        renderRecent();
+        setTimeout(() => fb.style.display = 'none', 3000);
+    }
+
+    function renderRecent() {
+        const session = DB.sessions.find(s => s.date === today());
+        const list = document.getElementById('recentList');
+        if (!session) return;
+        const atts = DB.attendance.filter(a => a.sessionId === session.id);
+        list.innerHTML = atts.map(a => {
+            const m = DB.members.find(x => x.id === a.memberId);
+            return m ? `<div class="recent-chip"><div class="dot"></div>${m.name}</div>` : '';
+        }).join('');
+    }
+
+    function searchByName(q) {
+        const res = document.getElementById('nameResults');
+        if (!q.trim()) { res.innerHTML = ''; return; }
+        const matches = DB.members.filter(m => m.name.toLowerCase().includes(q.toLowerCase()));
+        res.innerHTML = matches.map(m => `
+            <div class="name-result-item" onclick="document.getElementById('codeInput').value='${m.code}'; doCheckin();">
+                <span>${m.name}</span><span class="name-result-code">${m.code}</span>
+            </div>
+        `).join('');
+    }
+
+    function showAdminPanel(name) {
+        document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById('panel-' + name).classList.add('active');
+        if (name === 'miembros') renderMembers();
+        if (name === 'sesiones') renderSessions();
+        if (name === 'reportes') renderReport();
+    }
+
+    function renderAdmin() {
+        document.getElementById('statTotal').textContent = DB.members.length;
+        document.getElementById('statSessions').textContent = DB.sessions.length;
+        renderMembers();
+    }
+
+    function renderMembers() {
+        const table = document.getElementById('membersTable');
+        table.innerHTML = DB.members.map(m => `
+            <tr>
+                <td><span class="badge badge-gold">${m.code}</span></td>
+                <td>${m.name}</td>
+                <td>${m.role || '-'}</td>
+                <td>${DB.attendance.filter(a => a.memberId === m.id).length}</td>
+                <td><button class="btn btn-red" onclick="deleteMember('${m.id}')">X</button></td>
+            </tr>
+        `).join('');
+    }
+
+    function openAddMember() { document.getElementById('addMemberModal').classList.add('open'); }
+    function closeAddMember() { document.getElementById('addMemberModal').classList.remove('open'); }
+
+    function saveMember() {
+        const code = document.getElementById('newCode').value.toUpperCase();
+        const name = document.getElementById('newName').value;
+        if (!code || !name) return;
+        DB.members.push({ id: Date.now().toString(), code, name, role: document.getElementById('newRole').value });
+        saveDB();
+        closeAddMember();
+        renderMembers();
+    }
+
+    let toDelete = null;
+    function deleteMember(id) { toDelete = id; document.getElementById('deleteModal').classList.add('open'); }
+    function closeDeleteModal() { document.getElementById('deleteModal').classList.remove('open'); }
+    function confirmDelete() {
+        DB.members = DB.members.filter(m => m.id !== toDelete);
+        DB.attendance = DB.attendance.filter(a => a.memberId !== toDelete);
+        saveDB();
+        closeDeleteModal();
+        renderMembers();
+    }
+
+    function renderSessions() {
+        const table = document.getElementById('sessionsTable');
+        table.innerHTML = DB.sessions.map(s => {
+            const count = DB.attendance.filter(a => a.sessionId === s.id).length;
+            const pct = DB.members.length ? Math.round((count/DB.members.length)*100) : 0;
+            return `<tr>
+                <td>${s.date}</td><td>${s.time}</td><td>${count}</td>
+                <td><span class="pct-bar"><span class="pct-fill" style="width:${pct}%"></span></span>${pct}%</td>
+                <td><button class="btn btn-outline" onclick="openSessionDetail('${s.id}')">Ver</button></td>
+            </tr>`;
+        }).join('');
+    }
+
+    function openSessionDetail(id) {
+        const s = DB.sessions.find(x => x.id === id);
+        document.getElementById('sessionDetailTitle').textContent = s.date;
+        const atts = DB.attendance.filter(a => a.sessionId === id);
+        document.getElementById('sessionDetailTable').innerHTML = atts.map((a, i) => {
+            const m = DB.members.find(x => x.id === a.memberId);
+            return `<tr><td>${i+1}</td><td>${m.name}</td><td>${m.code}</td><td>${a.time}</td></tr>`;
+        }).join('');
+        document.getElementById('sessionDetailModal').classList.add('open');
+    }
+
+    function closeSessionDetail() { document.getElementById('sessionDetailModal').classList.remove('open'); }
+
+    function renderReport() {
+        const table = document.getElementById('reportTable');
+        const sel = document.getElementById('reportSession');
+        if (!sel.innerHTML) {
+            sel.innerHTML = '<option value="all">Todas las sesiones</option>' + DB.sessions.map(s => `<option value="${s.id}">${s.date}</option>`).join('');
+        }
+        
+        const filter = sel.value;
+        const total = filter === 'all' ? DB.sessions.length : 1;
+        
+        table.innerHTML = DB.members.map(m => {
+            const count = DB.attendance.filter(a => a.memberId === m.id && (filter === 'all' || a.sessionId === filter)).length;
+            const pct = total ? Math.round((count/total)*100) : 0;
+            return `<tr>
+                <td>${m.code}</td><td>${m.name}</td><td>${count}</td>
+                <td>${pct}%</td><td><span class="badge ${pct > 70 ? 'badge-green' : 'badge-red'}">${pct > 70 ? 'Frecuente' : 'Inconstante'}</span></td>
+            </tr>`;
+        }).join('');
+    }
+
+    function exportCSV() {
+        let csv = "Codigo,Nombre,Asistencias,Porcentaje\n";
+        DB.members.forEach(m => {
+            const count = DB.attendance.filter(a => a.memberId === m.id).length;
+            const pct = DB.sessions.length ? Math.round((count/DB.sessions.length)*100) : 0;
+            csv += `${m.code},${m.name},${count},${pct}%\n`;
+        });
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.setAttribute('href', url);
+        a.setAttribute('download', 'asistencia.csv');
+        a.click();
+    }
+</script>
+
+</body>
+</html>
